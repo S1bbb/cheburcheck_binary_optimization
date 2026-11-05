@@ -3,7 +3,6 @@ use etherparse::{
     Icmpv4Type, Icmpv6Slice, Icmpv6Type, IpNumber, LaxNetSlice, LaxSlicedPacket, TransportSlice,
     icmpv4, icmpv6,
 };
-use rand::RngCore;
 use rustls::pki_types::ServerName;
 use rustls::{ClientConfig, ClientConnection, RootCertStore};
 use socket2::{Domain, Protocol, SockRef, Socket, Type};
@@ -194,7 +193,7 @@ fn detect_post_client_hello(config: &DpiHopProbeConfig) -> io::Result<DpiHopProb
             break;
         }
         let mut payload = [0u8; PROBE_BYTES];
-        rand::thread_rng().fill_bytes(&mut payload);
+        rand::fill(&mut payload);
         let junk_sent_ms = capture.as_ref().map(TcpCapture::elapsed_ms);
         let payload_sent = send_with_ttl(&mut tcp, config.target, &payload, ttl)?;
         if !payload_sent {

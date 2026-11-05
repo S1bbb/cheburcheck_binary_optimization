@@ -38,22 +38,22 @@ jobs:
         run: cargo install cargo-deb
 
       - name: Build release binary
-        run: cargo build --release --package probe --bin cheburprobe --target x86_64-unknown-linux-musl
+        run: cargo build --profile release-probe --package probe --bin cheburprobe --target x86_64-unknown-linux-musl
 
       - name: Name Linux amd64 release asset
         run: |
           version=$(cargo metadata --no-deps --format-version 1 | jq -r '.packages[] | select(.name == "probe") | .version')
-          cp target/x86_64-unknown-linux-musl/release/cheburprobe \
-            "target/x86_64-unknown-linux-musl/release/cheburprobe-$version-linux-amd64"
+          cp target/x86_64-unknown-linux-musl/release-probe/cheburprobe \
+            "target/x86_64-unknown-linux-musl/release-probe/cheburprobe-$version-linux-amd64"
 
       - name: Build Debian package
-        run: cargo deb --package probe --target x86_64-unknown-linux-musl --no-strip --no-build -- --bin cheburprobe
+        run: cargo deb --profile release-probe --package probe --target x86_64-unknown-linux-musl --no-strip --no-build -- --bin cheburprobe
 
       - name: Upload Linux amd64 binary
         uses: actions/upload-artifact@v7
         with:
           name: cheburprobe-linux-amd64
-          path: target/x86_64-unknown-linux-musl/release/cheburprobe-*-linux-amd64
+          path: target/x86_64-unknown-linux-musl/release-probe/cheburprobe-*-linux-amd64
           compression-level: 0
 
       - name: Upload Linux amd64 Debian package
@@ -81,24 +81,25 @@ jobs:
         with:
           command: build
           target: "aarch64-unknown-linux-musl"
-          args: "--release --package probe --bin cheburprobe"
-          strip: true
+          args: "--profile release-probe --package probe --bin cheburprobe"
+          # Symbols are stripped by the release-probe profile itself.
+          strip: false
 
       - name: Build Debian package
-        run: cargo deb --package probe --target aarch64-unknown-linux-musl --no-strip --no-build -- --bin cheburprobe
+        run: cargo deb --profile release-probe --package probe --target aarch64-unknown-linux-musl --no-strip --no-build -- --bin cheburprobe
 
       - name: Name Linux arm64 release asset
         run: |
           version=$(cargo metadata --no-deps --format-version 1 | jq -r '.packages[] | select(.name == "probe") | .version')
-          cp target/aarch64-unknown-linux-musl/release/cheburprobe \
-            "target/aarch64-unknown-linux-musl/release/cheburprobe-$version-linux-arm64"
+          cp target/aarch64-unknown-linux-musl/release-probe/cheburprobe \
+            "target/aarch64-unknown-linux-musl/release-probe/cheburprobe-$version-linux-arm64"
 
       - name: Build legacy OpenWrt opkg packages
         run: |
           chmod +x probe/openwrt/build-ipk.sh
           for arch in $OPENWRT_ARM64_ARCHES; do
             OPENWRT_ARCH="$arch" probe/openwrt/build-ipk.sh \
-              target/aarch64-unknown-linux-musl/release/cheburprobe \
+              target/aarch64-unknown-linux-musl/release-probe/cheburprobe \
               target/aarch64-unknown-linux-musl/openwrt
           done
 
@@ -113,7 +114,7 @@ jobs:
               --workdir /work \
               alpine:edge \
               probe/openwrt/build-apk.sh \
-                target/aarch64-unknown-linux-musl/release/cheburprobe \
+                target/aarch64-unknown-linux-musl/release-probe/cheburprobe \
                 target/aarch64-unknown-linux-musl/openwrt
           done
 
@@ -121,7 +122,7 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: cheburprobe-linux-arm64
-          path: target/aarch64-unknown-linux-musl/release/cheburprobe-*-linux-arm64
+          path: target/aarch64-unknown-linux-musl/release-probe/cheburprobe-*-linux-arm64
           compression-level: 0
 
       - name: Upload Linux arm64 Debian package
@@ -151,20 +152,20 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
 
       - name: Build release binary
-        run: cargo build --release --package probe --bin cheburprobe
+        run: cargo build --profile release-probe --package probe --bin cheburprobe
 
       - name: Name Windows release asset
         shell: pwsh
         run: |
           $metadata = cargo metadata --no-deps --format-version 1 | ConvertFrom-Json
           $version = ($metadata.packages | Where-Object name -eq 'probe').version
-          Copy-Item target/release/cheburprobe.exe "target/release/cheburprobe-$version-windows-x86_64.exe"
+          Copy-Item target/release-probe/cheburprobe.exe "target/release-probe/cheburprobe-$version-windows-x86_64.exe"
 
       - name: Upload Windows amd64 binary
         uses: actions/upload-artifact@v7
         with:
           name: cheburprobe-windows-amd64
-          path: target/release/cheburprobe-*-windows-x86_64.exe
+          path: target/release-probe/cheburprobe-*-windows-x86_64.exe
           compression-level: 0
 
   docker:

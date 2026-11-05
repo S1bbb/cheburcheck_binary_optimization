@@ -2648,7 +2648,7 @@ dependencies = [
  "libc",
  "log",
  "polling",
- "rand 0.8.8",
+ "rand 0.10.3",
  "reports",
  "reqwest",
  "rumqttc 0.25.1",

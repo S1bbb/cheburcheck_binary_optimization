@@ -13,3 +13,17 @@ tokio = { version = "1.51.1", features = ["full"] }
 reqwest = { version = "0.12.24", default-features = false, features = ["stream", "rustls-tls-webpki-roots", "json"] }
 log = "0.4.29"
 serde = { version = "1", features = ["derive"] }
+
+# Size-optimized profile for the probe binary (cheburprobe), see issue #104.
+# Kept separate from `release` so server crates (website, querying) keep
+# opt-level 3. Build with `cargo build --profile release-probe -p probe`.
+#
+# panic = "abort" is intentionally NOT set: probe relies on unwinding to
+# isolate panics in tokio tasks, spawn_blocking jobs and capture threads
+# (JoinError / thread::join -> Err), so a single bug must not kill the daemon.
+[profile.release-probe]
+inherits = "release"
+opt-level = "z"
+lto = "fat"
+codegen-units = 1
+strip = true
